@@ -1,2 +1,2 @@
-Network_Name>Military_Radio
+Network_Name>TDMA_Radio_Networks
 Tooltip_Info>Description: 

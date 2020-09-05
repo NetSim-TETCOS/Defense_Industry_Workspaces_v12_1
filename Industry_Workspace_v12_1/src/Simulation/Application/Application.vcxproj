@@ -22,6 +22,7 @@
     <ClCompile Include="aes.c" />
     <ClCompile Include="aes_run.c" />
     <ClCompile Include="Application.c" />
+    <ClCompile Include="APP_OUT.c" />
     <ClCompile Include="BSM.c" />
     <ClCompile Include="CoAP.c" />
     <ClCompile Include="Database_FTP_Custom.c" />

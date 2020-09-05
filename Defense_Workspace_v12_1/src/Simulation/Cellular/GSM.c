@@ -129,7 +129,7 @@ int fn_NetSim_Cellular_AddPacketToBuffer(NetSim_PACKET* packet,NETSIM_ID nDevice
 /** This function is used to allocate the channels */
 int fn_NetSim_Cellular_AllocateChannel(NetSim_EVENTDETAILS* pstruEventDetails,NetSim_PACKET* packet)
 {
-	APP_INFO** appInfo=(APP_INFO**)NETWORK->appInfo;
+	ptrAPPLICATION_INFO* appInfo=(ptrAPPLICATION_INFO*)NETWORK->appInfo;
 	Cellular_MS_MAC* MSMac=DEVICE_MACVAR(pstruEventDetails->nDeviceId,pstruEventDetails->nInterfaceId);
 	NETSIM_ID nApplicationId=packet->pstruAppData->nApplicationId;
 	if(MSMac->nMSStatusFlag!=Status_IDLE && MSMac->nMSStatusFlag != Status_CallEnd)

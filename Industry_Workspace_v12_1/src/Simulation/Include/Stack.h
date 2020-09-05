@@ -145,6 +145,9 @@ enum enum_AppProtocol
 
 	//Application
 	APP_PROTOCOL_OPENFLOW,
+	APP_PROTOCOL_RTP,
+
+	//Traffic
 	APP_PROTOCOL_CBR=PROTOCOL_APPLICATION,
 	APP_PROTOCOL_VOICE=PROTOCOL_APPLICATION,
 	APP_PROTOCOL_FTP=PROTOCOL_APPLICATION,
@@ -324,7 +327,17 @@ enum enum_SchedulingType
 	SCHEDULING_PRIORITY=2,
 	SCHEDULING_ROUNDROBIN=3,
 	SCHEDULING_WFQ=4,
+	SCHEDULING_EDF=5,
+	SCHEDULING_CLASSBASED=6,
 };
+
+typedef enum enum_QueuingTechnique
+{
+	QUEUING_DROPTAIL,
+	QUEUING_RED,
+	QUEUING_WRED,
+}QUEUINGTECHNIQUE;
+
 enum enum_TransmissionType
 {
 	UNICAST,
@@ -532,7 +545,13 @@ struct stru_NetSim_Device_Buffer
 {
 	double dMaxBufferSize;	//Max buffer size in bytes
 	double dCurrentBufferSize;	//Current buffer size in bytes
+
 	SCHEDULING_TYPE nSchedulingType;	//Scheduling type
+	QUEUINGTECHNIQUE queuingTechnique;
+
+	void* schedulingParam;
+	void* queuingParam;
+
 	unsigned int nQueuedPacket;
 	unsigned int nDequeuedPacket;
 	unsigned int nDroppedPacket;
@@ -855,8 +874,6 @@ _declspec(dllexport) MAC_LAYER_PROTOCOL fn_NetSim_Stack_GetMacProtocol(NETSIM_ID
 _declspec(dllexport) NETWORK_LAYER_PROTOCOL fn_NetSim_Stack_GetNWProtocol(NETSIM_ID nDeviceId);
 //Used to get network layer routing protocol running on device
 _declspec(dllexport) NETWORK_LAYER_PROTOCOL fn_NetSim_Stack_GetNWRoutingProtocol(NETSIM_ID nDeviceId);
-//used to get Transport layer protocol based on the packet type.
-_declspec(dllexport) TRANSPORT_LAYER_PROTOCOL fn_NetSim_Stack_GetTrnspProtocol(NETSIM_ID nDeviceId, const struct stru_NetSim_Packet*);
 
 /* Configuration API*/
 //Used to get an attributes value from an xml tag
@@ -926,10 +943,10 @@ _declspec(dllexport) NETSIM_ID fn_NetSim_GetInterfaceIdByConfigId(NETSIM_ID devI
 //Convert Connection medium string to enum
 _declspec(dllexport) PHYSICAL_LAYER_MEDIUM fn_NetSim_Cofig_GetConnectionMedium(char* medium);
 //Used to configure protocol
-_declspec(dllexport) int fn_NetSim_xmlConfigureProtocolProperty(void* xmlChildNode, NETSIM_ID nDeviceId, NETSIM_ID nInterfaceId, LAYER_TYPE nLayerType, int nProtocolId);
+_declspec(dllexport) int fn_NetSim_xmlConfigureProtocolProperty(void* xmlChildNode, NETSIM_ID nDeviceId, NETSIM_ID nInterfaceId, LAYER_TYPE nLayerType, UINT nProtocolId);
 _declspec(dllexport) bool fn_NetSim_Stack_isProtocolConfigured(NETSIM_ID d,
 															   LAYER_TYPE layer,
-															   int protocol);
+															   UINT protocol);
 /* Metrics */
 _declspec(dllexport) int fn_NetSim_Metrics_Add(const NetSim_PACKET* pPacket);
 
@@ -1068,7 +1085,7 @@ Used to read time/duration.
 */
 _declspec(dllexport) double fn_NetSim_Config_read_time(void* xmlNetSimNode,
 													   char* name,
-													   double defaultDataRate,
+													   double defaultTime,
 													   char* returnUnit);
 
 #ifdef  __cplusplus

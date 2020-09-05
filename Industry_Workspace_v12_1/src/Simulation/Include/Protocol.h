@@ -57,8 +57,10 @@ enum dll_id
 	libUWAN,
 	libLTE_NR,
 	libSATELLITE,
+	libRTP,
 	nStaticProtocolCount, //Keep this at last
 };
+
 struct stru_ProtocolInfo
 {
 	int nComponentId;

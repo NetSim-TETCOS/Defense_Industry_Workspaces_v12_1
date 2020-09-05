@@ -62,6 +62,7 @@ static void remove_packet_from_txList(NetSim_PACKET* packet)
 		}
 		t = t->pstruNextPacket;
 	}
+	packet->pstruNextPacket = NULL;
 }
 
 static void mark_packet_for_collision()

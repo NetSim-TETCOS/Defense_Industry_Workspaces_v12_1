@@ -14,7 +14,7 @@
 #include "main.h"
 #include "Application.h"
 
-int fn_NetSim_Emulation_InitApplication(APP_INFO* appInfo);
+int fn_NetSim_Emulation_InitApplication(ptrAPPLICATION_INFO appInfo);
 
 static UINT update_source_ip(NETSIM_IPAddress* realIP, char* szVal, UINT count)
 {
@@ -36,7 +36,7 @@ static UINT update_source_ip(NETSIM_IPAddress* realIP, char* szVal, UINT count)
 	return i;
 }
 
-int fn_NetSim_Application_ConfigureEmulationTraffic(APP_INFO* appInfo,void* xmlNetSimNode)
+int fn_NetSim_Application_ConfigureEmulationTraffic(ptrAPPLICATION_INFO appInfo,void* xmlNetSimNode)
 {
 	char* szVal;
 	APP_EMULATION_INFO* info=(APP_EMULATION_INFO*)calloc(1,sizeof* info);
@@ -112,7 +112,8 @@ int fn_NetSim_Application_ConfigureEmulationTraffic(APP_INFO* appInfo,void* xmlN
 	_putenv("NETSIM_EMULATOR=1");
 	return 0;
 }
-int fn_NetSim_Emulation_InitApplication(APP_INFO* appInfo)
+
+int fn_NetSim_Emulation_InitApplication(ptrAPPLICATION_INFO appInfo)
 {
 	APP_EMULATION_INFO* info = appInfo->appData;
 
@@ -124,7 +125,7 @@ int fn_NetSim_Emulation_InitApplication(APP_INFO* appInfo)
 	return 0;
 }
 
-void fn_NetSim_Emulation_StartApplication(APP_INFO* appInfo)
+void fn_NetSim_Emulation_StartApplication(ptrAPPLICATION_INFO appInfo)
 {
 	if (appInfo->nTransmissionType == MULTICAST)
 	{

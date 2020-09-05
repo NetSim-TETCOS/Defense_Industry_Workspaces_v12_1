@@ -18,7 +18,7 @@ typedef struct stru_ber
 {
 	double dSNR;
 	double dBER;
-}BER;
+}BER, *ptrBER;
 
 _declspec(dllexport) double calculate_ber(double snr,BER ber_table[],size_t table_len);
 _declspec(dllexport) double calculate_snr(double dReceivedPower_dbm, double bandwidth_mHz);
@@ -44,5 +44,25 @@ _declspec(dllexport) double calculate_rxpower_by_ber(double refBer, PHY_MODULATI
 _declspec(dllexport) double calculate_rxpower_by_per(double per, double refPacketSize,
 													 PHY_MODULATION modulation,
 													 double datarate_mbps, double bandwidth_mhz);
+
+/**
+	Used to read BER file.
+	File format
+		<SNR1>,<BER1>,
+		<SNR2>,<BER2>,
+		....
+		....
+		....
+		<SNRn>,<BERn>,
+	Input
+		BER file name with relative path to IO path
+		pointer to BER table length
+	Return
+		BER table of size len
+	Note: SNR value in file must be in increasing order.
+		  This API doesn't check this, so if it is not will
+		  result wrong behaviour.
+*/
+_declspec(dllexport) ptrBER read_ber_file(char* file, size_t* len);
 
 #endif //_NETSIM_ERROR_MODEL_H_

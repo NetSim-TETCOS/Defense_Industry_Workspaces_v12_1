@@ -28,6 +28,7 @@
 #include "NetSim_utility.h"
 #include "../Firewall/Firewall.h"
 #include "Animation.h"
+#include "../SupportFunction/Scheduling.h"
 
 _declspec(dllexport) int fn_NetSim_IP_VPN_Init();
 NETWORK_LAYER_PROTOCOL fnGetLocalNetworkProtocol(NetSim_EVENTDETAILS* pstruEventDetails);
@@ -146,6 +147,7 @@ _declspec(dllexport) int fn_NetSim_IP_Init(struct stru_NetSim_Network *NETWORK_F
 
 	//Initialize the VPN
 	fn_NetSim_IP_VPN_Init();
+
 	return 1;
 }
 
@@ -411,6 +413,7 @@ _declspec(dllexport) int fn_NetSim_IP_Run()
 
 			if (action == ACTION_MOVEUP)
 			{
+				TRANSPORT_LAYER_PROTOCOL txProtocol = TX_PROTOCOL_NULL;
 				IP_PROTOCOL_NUMBER num = packet->pstruNetworkData->IPProtocol;
 				switch (num)
 				{
@@ -427,14 +430,18 @@ _declspec(dllexport) int fn_NetSim_IP_Run()
 						//Already processed by routing protocol call. 
 						break;
 					case IPPROTOCOL_TCP:
+						if (txProtocol == TX_PROTOCOL_NULL)
+							txProtocol = TX_PROTOCOL_TCP;
 					case IPPROTOCOL_UDP:
+						if(txProtocol == TX_PROTOCOL_NULL)
+							txProtocol = TX_PROTOCOL_UDP;
 					default:
 						//For legacy code
 
 						//Add transport in event
 						pstruEventDetails->dPacketSize = packet->pstruNetworkData->dPacketSize;
 						pstruEventDetails->nEventType = TRANSPORT_IN_EVENT;
-						pstruEventDetails->nProtocolId = fn_NetSim_Stack_GetTrnspProtocol(pstruEventDetails->nDeviceId, packet);
+						pstruEventDetails->nProtocolId = txProtocol;
 						pstruEventDetails->nSubEventType = 0;
 						pstruEventDetails->szOtherDetails = NULL;
 						fnpAddEvent(pstruEventDetails);
@@ -594,6 +601,34 @@ _declspec(dllexport) char* fn_NetSim_IP_Trace(NETSIM_ID nSubeventid)
 		return "IP_UNKNOWN_SUBEVENT";
 	}
 }
+
+#define QUEUING_MAX_TH_MB_DEFAULT	7.0
+#define QUEUING_MIN_TH_MB_DEFAULT	3.0
+
+#define QUEUING_MAX_P_DEFAULT	0.5
+#define QUEUING_WQ_DEFAULT	0.0002
+
+#define QUEUING_LOW_MAX_TH_MB_DEFAULT	4.0
+#define QUEUING_NORMAL_MAX_TH_MB_DEFAULT	5.0
+#define QUEUING_MEDIUM_MAX_TH_MB_DEFAULT	6.0
+#define QUEUING_HIGH_MAX_TH_MB_DEFAULT	7.0
+#define QUEUING_LOW_MIN_TH_MB_DEFAULT	2.0
+#define QUEUING_NORMAL_MIN_TH_MB_DEFAULT	3.0
+#define QUEUING_MEDIUM_MIN_TH_MB_DEFAULT	4.0
+#define QUEUING_HIGH_MIN_TH_MB_DEFAULT	5.0
+
+#define SCHEDULING_MAX_LATENCY_UGS_MS_DEFAULT 100
+#define SCHEDULING_MAX_LATENCY_rtPS_MS_DEFAULT 150
+#define SCHEDULING_MAX_LATENCY_ertPS_MS_DEFAULT 300
+#define SCHEDULING_MAX_LATENCY_nrtPS_MS_DEFAULT 300
+#define SCHEDULING_MAX_LATENCY_BE_MS_DEFAULT 100000
+
+#define SCHEDULING_MAX_THROUGHPUT_RATIO_LOW_DEFAULT 10
+#define SCHEDULING_MAX_THROUGHPUT_RATIO_NORMAL_DEFAULT 15
+#define SCHEDULING_MAX_THROUGHPUT_RATIO_MEDIUM_DEFAULT 25
+#define SCHEDULING_MAX_THROUGHPUT_RATIO_HIGH_DEFAULT 50
+
+
 /**
 This function is called by NetworkStack.dll, while configuring the device
 NETWORK layer for IP protocol.
@@ -605,7 +640,7 @@ _declspec(dllexport) int fn_NetSim_IP_Configure(void** var)
 	NETSIM_ID nDeviceId = 0;
 	NETSIM_ID nInterfaceId = 0;
 	LAYER_TYPE nLayerType = 0;
-	char* szVal;
+	char* szVal; 
 	IP_DEVVAR* devVar;
 	fpConfigLog = var[0];
 	xmlNetSimNode = var[2];
@@ -634,6 +669,7 @@ _declspec(dllexport) int fn_NetSim_IP_Configure(void** var)
 		if (nDeviceType == ROUTER)
 		{
 			pstruBuffer = NETWORK->ppstruDeviceList[nDeviceId - 1]->ppstruInterfaceList[nInterfaceId - 1]->pstruAccessInterface->pstruAccessBuffer;
+			
 			//Configure the Buffer size
 			szVal = fn_NetSim_xmlConfig_GetVal(xmlNetSimNode, "BUFFER_SIZE", 0);
 			if (szVal)
@@ -641,6 +677,65 @@ _declspec(dllexport) int fn_NetSim_IP_Configure(void** var)
 			else
 				pstruBuffer->dMaxBufferSize = 8;//8 MB
 			free(szVal);
+
+
+			//Configure the Queuing type
+			szVal = fn_NetSim_xmlConfig_GetVal(xmlNetSimNode, "QUEUING_TYPE", 0);
+			if (szVal)
+			{
+				if (_stricmp(szVal, "DROP_TAIL") == 0)
+					pstruBuffer->queuingTechnique = QUEUING_DROPTAIL;
+				else if (_stricmp(szVal, "RED") == 0)
+				{
+					pstruBuffer->queuingTechnique = QUEUING_RED;
+
+					ptrQUEUING_RED_VAR queuing_var = calloc(1, sizeof * queuing_var);
+					queuing_var->max_th = fn_NetSim_Config_read_dataLen(xmlNetSimNode, "MAX_TH", QUEUING_MAX_TH_MB_DEFAULT, "MB");
+					queuing_var->min_th = fn_NetSim_Config_read_dataLen(xmlNetSimNode, "MIN_TH", QUEUING_MIN_TH_MB_DEFAULT, "MB");
+					getXmlVar(&queuing_var->max_p, MAX_P, xmlNetSimNode, 1, _DOUBLE, QUEUING);
+					getXmlVar(&queuing_var->wq, WQ, xmlNetSimNode, 1, _DOUBLE, QUEUING);
+
+					queuing_var->avg_queue_size = 0;
+					queuing_var->count = -1;
+					queuing_var->random_value = NETSIM_RAND_01();
+					queuing_var->q_time = 0;
+					pstruBuffer->queuingParam = queuing_var;
+				}
+				else if (_stricmp(szVal, "WRED") == 0)
+				{
+					pstruBuffer->queuingTechnique = QUEUING_WRED;
+					ptrQUEUING_WRED_VAR queuing_var = calloc(1, sizeof * queuing_var);
+					double* min_th_values = calloc(4, sizeof * min_th_values);
+					double* max_th_values = calloc(4, sizeof * max_th_values);
+					min_th_values[0] = fn_NetSim_Config_read_dataLen(xmlNetSimNode, "LOW_MIN_TH", QUEUING_LOW_MIN_TH_MB_DEFAULT, "MB");
+					min_th_values[1] = fn_NetSim_Config_read_dataLen(xmlNetSimNode, "NORMAL_MIN_TH", QUEUING_NORMAL_MIN_TH_MB_DEFAULT, "MB");
+					min_th_values[2] = fn_NetSim_Config_read_dataLen(xmlNetSimNode, "MEDIUM_MIN_TH", QUEUING_MEDIUM_MIN_TH_MB_DEFAULT, "MB");
+					min_th_values[3] = fn_NetSim_Config_read_dataLen(xmlNetSimNode, "HIGH_MIN_TH", QUEUING_HIGH_MIN_TH_MB_DEFAULT, "MB");
+					max_th_values[0] = fn_NetSim_Config_read_dataLen(xmlNetSimNode, "LOW_MAX_TH", QUEUING_LOW_MAX_TH_MB_DEFAULT, "MB");
+					max_th_values[1] = fn_NetSim_Config_read_dataLen(xmlNetSimNode, "NORMAL_MAX_TH", QUEUING_NORMAL_MAX_TH_MB_DEFAULT, "MB");
+					max_th_values[2] = fn_NetSim_Config_read_dataLen(xmlNetSimNode, "MEDIUM_MAX_TH", QUEUING_MEDIUM_MAX_TH_MB_DEFAULT, "MB");
+					max_th_values[3] = fn_NetSim_Config_read_dataLen(xmlNetSimNode, "HIGH_MAX_TH", QUEUING_HIGH_MAX_TH_MB_DEFAULT, "MB");
+					getXmlVar(&queuing_var->max_p, MAX_P, xmlNetSimNode, 1, _DOUBLE, QUEUING);
+					getXmlVar(&queuing_var->wq, WQ, xmlNetSimNode, 1, _DOUBLE, QUEUING);
+
+					queuing_var->max_th = max_th_values;
+					queuing_var->min_th = min_th_values;
+					queuing_var->avg_queue_size = 0;
+					queuing_var->count = -1;
+					queuing_var->random_value = NETSIM_RAND_01();
+					pstruBuffer->queuingParam = queuing_var;
+				}
+				else
+				{
+					fnNetSimError("Unknwon queuing technique %s for router %d-%d.\n",
+						szVal, nDeviceId, nInterfaceId);
+					pstruBuffer->queuingTechnique = QUEUING_DROPTAIL;
+				}
+			}
+			else
+				pstruBuffer->queuingTechnique = QUEUING_DROPTAIL;
+			free(szVal);
+
 
 			//Configure the Scheduling type
 			szVal = fn_NetSim_xmlConfig_GetVal(xmlNetSimNode, "SCHEDULING_TYPE", 0);
@@ -651,12 +746,31 @@ _declspec(dllexport) int fn_NetSim_IP_Configure(void** var)
 					pstruBuffer->nSchedulingType = SCHEDULING_FIFO;
 				else if (strcmp(szVal, "PRIORITY") == 0)
 					pstruBuffer->nSchedulingType = SCHEDULING_PRIORITY;
-				else if (strcmp(szVal, "ROUND ROBIN") == 0)
+				else if (strcmp(szVal, "ROUND_ROBIN") == 0)
 					pstruBuffer->nSchedulingType = SCHEDULING_ROUNDROBIN;
 				else if (strcmp(szVal, "WFQ") == 0)
 					pstruBuffer->nSchedulingType = SCHEDULING_WFQ;
+				else if (strcmp(szVal, "EDF") == 0)
+				{
+					pstruBuffer->nSchedulingType = SCHEDULING_EDF;
+					ptrSCHEDULING_EDF_VAR scheduling_var = calloc(1, sizeof * scheduling_var);
+					double* max_latency_values = calloc(5, sizeof * max_latency_values);
+
+					max_latency_values[0] = fn_NetSim_Config_read_time(xmlNetSimNode, "MAX_LATENCY_UGS", SCHEDULING_MAX_LATENCY_UGS_MS_DEFAULT, "ms");
+					max_latency_values[1] = fn_NetSim_Config_read_time(xmlNetSimNode, "MAX_LATENCY_rtPS", SCHEDULING_MAX_LATENCY_rtPS_MS_DEFAULT, "ms");
+					max_latency_values[2] = fn_NetSim_Config_read_time(xmlNetSimNode, "MAX_LATENCY_ertPS", SCHEDULING_MAX_LATENCY_ertPS_MS_DEFAULT, "ms");
+					max_latency_values[3] = fn_NetSim_Config_read_time(xmlNetSimNode, "MAX_LATENCY_nrtPS", SCHEDULING_MAX_LATENCY_nrtPS_MS_DEFAULT, "ms");
+					max_latency_values[4] = fn_NetSim_Config_read_time(xmlNetSimNode, "MAX_LATENCY_BE", SCHEDULING_MAX_LATENCY_BE_MS_DEFAULT, "ms");
+
+					scheduling_var->max_latency = max_latency_values;
+					pstruBuffer->schedulingParam = scheduling_var;
+				}
 				else
+				{
+					fnNetSimError("Unknwon scheduling technique %s for router %d-%d.\n",
+						szVal, nDeviceId, nInterfaceId);
 					pstruBuffer->nSchedulingType = SCHEDULING_FIFO;
+				}
 			}
 			else
 				pstruBuffer->nSchedulingType = SCHEDULING_FIFO;

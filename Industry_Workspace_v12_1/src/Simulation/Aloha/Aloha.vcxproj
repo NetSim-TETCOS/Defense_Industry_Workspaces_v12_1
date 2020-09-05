@@ -29,6 +29,9 @@
     <ClInclude Include="Aloha.h" />
     <ClInclude Include="Aloha_enum.h" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Aloha.vcxproj.user" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{FF32FF78-648D-4652-8086-1C4CCB149A5B}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>

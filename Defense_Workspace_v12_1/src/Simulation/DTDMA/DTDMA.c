@@ -288,7 +288,7 @@ _declspec(dllexport) int fn_NetSim_DTDMA_Configure(void** var)
 				getXmlVar(&phy->dAntennaHeight, ANTENNA_HEIGHT, xmlNetSimNode, 1, _DOUBLE, DTDMA);
 				getXmlVar(&phy->dAntennaGain, ANTENNA_GAIN, xmlNetSimNode, 1, _DOUBLE, DTDMA);
 				getXmlVar(&phy->d0, D0, xmlNetSimNode, 1, _DOUBLE, DTDMA);
-				getXmlVar(&phy->pld0, PL_D0, xmlNetSimNode, 1, _DOUBLE, DTDMA);
+				getXmlVar(&phy->pld0, PL_D0, xmlNetSimNode, 0, _DOUBLE, DTDMA);
 
 			}
 			break;

@@ -72,8 +72,8 @@
 	</xs:simpleType>
 	<xs:simpleType name="MEDIUM">
 		<xs:restriction base="xs:string">
-			<xs:enumeration value="WIRED" />
-			<xs:enumeration value="WIRELESS" />
+			<xs:pattern value="[Ww][Ii][Rr][Ee][Dd]" />
+			<xs:pattern value="[Ww][Ii][Rr][Ee][Ll][Ee][Ss][Ss]" />
 		</xs:restriction>
 	</xs:simpleType>
 	<xs:simpleType name="Connection_Mode">
@@ -134,6 +134,7 @@
 			<xs:enumeration value="OPEN_FLOW"/>
 			<xs:enumeration value="MOBILITY"/>
 			<xs:enumeration value="SATELLITE"/>
+			<xs:enumeration value="RTP"/>
 		</xs:restriction>
 	</xs:simpleType>
 	<xs:simpleType name="Layer">
@@ -170,6 +171,7 @@
 			<xs:enumeration value="SATELLITE"/>
 			<xs:enumeration value="SATELLITE_GW"/>
 			<xs:enumeration value="SATELLITE_UT"/>
+			<xs:enumeration value="UT_ROUTER"/>
 		</xs:restriction>
 	</xs:simpleType>
 	<xs:simpleType name="DeviceType">
@@ -206,7 +208,10 @@
 			<xs:enumeration value="SinkNode" />
 			<xs:enumeration value="Incumbent" />
 			<xs:enumeration value="LTE_UE"/>
+			<xs:enumeration value="LTE_gNB"/>
+			<xs:enumeration value="LTE_EPC"/>
 			<xs:enumeration value="LTE_D2D_UE"/>
+			<xs:enumeration value="LTE_NR_UE"/>
 			<xs:enumeration value="LTE_VANET_UE"/>
 			<xs:enumeration value="LTE_MME"/>
 			<xs:enumeration value="LTE_eNB"/>
@@ -219,6 +224,13 @@
 			<xs:enumeration value="HUB_CSMA_CD"/>
 			<xs:enumeration value="CONCENTRATOR"/>
 			<xs:enumeration value="VANET_WIRELESSNODE"/>
+			<xs:enumeration value="SATELLITE"/>
+			<xs:enumeration value="UT_ROUTER"/>
+			<xs:enumeration value="SATELLITE_UT"/>
+			<xs:enumeration value="SATELLITE_GW"/>
+			<xs:enumeration value="PURE_ALOHA_NODE"/>
+			<xs:enumeration value="SLOTTED_ALOHA_NODE"/>
+			<xs:enumeration value="RSU"/>
 		</xs:restriction>
 	</xs:simpleType>
 	<xs:simpleType name="InterfaceType">
@@ -306,6 +318,8 @@
 							<xs:element name="ZOOM_LEVEL" type="xs:string" maxOccurs="1" minOccurs="0" />
 							<xs:element name="NETWORK_NAME" type="xs:string" maxOccurs="1" minOccurs="1" />
 							<xs:element name="ENVIRONMENT_LENGTH" type="xs:string" maxOccurs="1" minOccurs="0" />
+							<xs:element name="LATITUDE" type="xs:string" maxOccurs="1" minOccurs="0" />
+							<xs:element name="LONGITUDE" type="xs:string" maxOccurs="1" minOccurs="0" />
 						</xs:sequence>
 					</xs:complexType>
 				</xs:element>
@@ -337,6 +351,11 @@
 																			<xs:attribute name="GROUP_ID" type="xs:positiveInteger" use="optional"/>
 																			<xs:attribute name="FILE_NAME" type="xs:string" use="optional"/>
 																			<xs:attribute name="STEP_SIZE" type="xs:string" use="optional"/>
+																			<xs:attribute name="MAX_SPEED_M_S" type="xs:double" use="optional" />
+																			<xs:attribute name="MIN_SPEED_M_S" type="xs:double" use="optional" />
+																			<xs:attribute name="STOP_PROBABILITY" type="xs:double" use="optional" />
+																			<xs:attribute name="STOP_DURATION_S" type="xs:integer" use="optional" />
+																			<xs:attribute name="OPEN_MOBILITY_FILE" type="xs:string" use="optional" />
 																		</xs:complexType>
 																	</xs:element>
 																</xs:sequence>
@@ -421,6 +440,7 @@
 																								<xs:attribute name="PREFIX_LENGTH" type="xs:positiveInteger" use="optional"/>
 																								<xs:attribute name="SUBNET_MASK" type="IPAddress" use="optional" />
 																								<xs:attribute name="DEFAULT_GATEWAY" type="IPAddress" use="optional" />
+																								<xs:attribute name="BUFFER_SIZE" type="xs:positiveInteger" use="optional" />
 																								<xs:attribute name="SCHEDULING_TYPE" use="optional">
 																									<xs:simpleType>
 																										<xs:restriction base="xs:string">
@@ -428,10 +448,120 @@
 																											<xs:enumeration value="PRIORITY" />
 																											<xs:enumeration value="ROUND_ROBIN" />
 																											<xs:enumeration value="WFQ" />
+																											<xs:enumeration value="EDF" />
+																											<xs:enumeration value="CLASS_BASED"/>
 																										</xs:restriction>
 																									</xs:simpleType>
 																								</xs:attribute>
-																								<xs:attribute name="BUFFER_SIZE" type="xs:positiveInteger" use="optional" />
+																								
+																								<xs:attribute name="MAX_LATENCY_UGS_MS" use="optional" type="xs:double"/>
+																								<xs:attribute name="MAX_LATENCY_rtPS_MS" use="optional" type="xs:double"/>
+																								<xs:attribute name="MAX_LATENCY_ertPS_MS" use="optional" type="xs:double"/>
+																								<xs:attribute name="MAX_LATENCY_nrtPS_MS" use="optional" type="xs:double"/>
+																							 <xs:attribute name="MAX_LATENCY_BE_MS" use="optional" type="xs:double"/>
+																							 <xs:attribute name="QUEUING_TYPE" use="optional">
+																									<xs:simpleType>
+																										<xs:restriction base="xs:string">
+																											<xs:enumeration value="DROP_TAIL" />
+																											<xs:enumeration value="RED" />
+																											<xs:enumeration value="WRED" />
+																										</xs:restriction>
+																									</xs:simpleType>
+																								</xs:attribute>
+																							 <xs:attribute name="MAX_TH_MB" use="optional" type="xs:double"/>
+																							 <xs:attribute name="MIN_TH_MB" use="optional" type="xs:double"/>
+																							 <xs:attribute name="MAX_P" use="optional">
+																									<xs:simpleType>
+																										<xs:restriction base="xs:double">
+																											<xs:minInclusive value="0" />
+																											<xs:maxInclusive value="1" />
+																										</xs:restriction>
+																									</xs:simpleType>
+																								</xs:attribute>
+																								<xs:attribute name="WQ" use="optional">
+																									<xs:simpleType>
+																										<xs:restriction base="xs:double">
+																											<xs:minInclusive value="0"/>
+																											<xs:maxInclusive value="1"/>
+																										</xs:restriction>
+																									</xs:simpleType>
+																								</xs:attribute>
+																								<xs:attribute name="LOW_MAX_TH_MB" use="optional">
+																									<xs:simpleType>
+																										<xs:restriction base="xs:double">
+																											<xs:minInclusive value="0" />
+																										</xs:restriction>
+																									</xs:simpleType>
+																								</xs:attribute>
+																								<xs:attribute name="LOW_MIN_TH_MB" use="optional">
+																									<xs:simpleType>
+																										<xs:restriction base="xs:double">
+																										</xs:restriction>
+																									</xs:simpleType>
+																								</xs:attribute>
+																								<xs:attribute name="NORMAL_MAX_TH_MB" use="optional">
+																									<xs:simpleType>
+																										<xs:restriction base="xs:double">
+																											<xs:minInclusive value="0" />
+																										</xs:restriction>
+																									</xs:simpleType>
+																								</xs:attribute>
+																								<xs:attribute name="NORMAL_MIN_TH_MB" use="optional">
+																									<xs:simpleType>
+																										<xs:restriction base="xs:double">
+																										</xs:restriction>
+																									</xs:simpleType>
+																								</xs:attribute>
+																								<xs:attribute name="MEDIUM_MAX_TH_MB" use="optional">
+																									<xs:simpleType>
+																										<xs:restriction base="xs:double">
+																											<xs:minInclusive value="0" />
+																										</xs:restriction>
+																									</xs:simpleType>
+																								</xs:attribute>
+																								<xs:attribute name="MEDIUM_MIN_TH_MB" use="optional">
+																									<xs:simpleType>
+																										<xs:restriction base="xs:double">
+																										</xs:restriction>
+																									</xs:simpleType>
+																								</xs:attribute>
+																								<xs:attribute name="HIGH_MAX_TH_MB" use="optional">
+																									<xs:simpleType>
+																										<xs:restriction base="xs:double">
+																											<xs:minInclusive value="0" />
+																										</xs:restriction>
+																									</xs:simpleType>
+																								</xs:attribute>
+																								<xs:attribute name="HIGH_MIN_TH_MB" use="optional">
+																									<xs:simpleType>
+																										<xs:restriction base="xs:double">
+																										</xs:restriction>
+																									</xs:simpleType>
+																								</xs:attribute>
+																								<xs:attribute name="MAX_THROUGHPUT_LOW" use="optional">
+																									<xs:simpleType>
+																										<xs:restriction base="xs:double">
+																										</xs:restriction>
+																									</xs:simpleType>
+																								</xs:attribute>
+																								<xs:attribute name="MAX_THROUGHPUT_NORMAL" use="optional">
+																									<xs:simpleType>
+																										<xs:restriction base="xs:double">
+																										</xs:restriction>
+																									</xs:simpleType>
+																								</xs:attribute>
+																								<xs:attribute name="MAX_THROUGHPUT_MEDIUM" use="optional">
+																									<xs:simpleType>
+																										<xs:restriction base="xs:double">
+																										</xs:restriction>
+																									</xs:simpleType>
+																								</xs:attribute>
+																								<xs:attribute name="MAX_THROUGHPUT_HIGH" use="optional">
+																									<xs:simpleType>
+																										<xs:restriction base="xs:double">
+																										</xs:restriction>
+																									</xs:simpleType>
+																								</xs:attribute>
 																							</xs:complexType>
 																						</xs:element>
 																					</xs:sequence>
@@ -465,7 +595,7 @@
 																					<xs:attribute name="MAC_ADDRESS" use="optional">
 																						<xs:simpleType>
 																							<xs:restriction base="xs:token">
-																								<xs:pattern value="[0-9A-F]+" />
+																								<xs:pattern value="[0-9a-fA-F]+" />
 																								<xs:length value="12" />
 																							</xs:restriction>
 																						</xs:simpleType>
@@ -683,6 +813,7 @@
 																		<xs:attribute name="TEMPERATURE" use="required" type="xs:double"/>
 																	</xs:complexType>
 																</xs:element>
+																<xs:group ref="MARKOV_LOO_FADING_ELEMENT"/>
 															</xs:sequence>
 															<xs:attribute name="TEMPERATUREZONE_COUNT" use="optional" type="xs:nonNegativeInteger"/>
 															<xs:attribute name="SALINITY" use="optional" type="xs:double"/>
@@ -712,6 +843,7 @@
 															<xs:attribute name="PROPAGATION_DELAY_UP" type="xs:int" />
 															<xs:attribute name="FREQUENCY" type="xs:int" />
 															<xs:attribute name="PATHLOSS_EXPONENT" type="xs:float" use="optional" />
+															<xs:attribute name="PATHLOSS_METRIX_FILE" type="xs:string" use="optional"/>
 															<xs:attribute name="FADING_FIGURE" type="xs:float" use="optional" />
 															<xs:attribute name="STANDARD_DEVIATION" type="xs:float" />
 															<xs:attribute name="CHANNEL_NUMBER" type="xs:int" />
@@ -731,6 +863,8 @@
 																		<xs:enumeration value="INDOOR_HOME"/>
 																		<xs:enumeration value="INDOOR_FACTORY"/>
 																		<xs:enumeration value="THORP"/>
+																		<xs:enumeration value="TWO_RAY"/>
+																		<xs:enumeration value="PATHLOSS_METRIX_FILE"/>
 																	</xs:restriction>
 																</xs:simpleType>
 															</xs:attribute>
@@ -740,6 +874,7 @@
 																		<xs:enumeration value="RAYLEIGH"/>
 																		<xs:enumeration value="RICIAN"/>
 																		<xs:enumeration value="NAKAGAMI"/>
+																		<xs:enumeration value="MARKOV_LOO"/>
 																		<xs:enumeration value="NONE"/>
 																	</xs:restriction>
 																</xs:simpleType>
@@ -753,6 +888,8 @@
 																	</xs:restriction>
 																</xs:simpleType>
 															</xs:attribute>
+															<xs:attribute name="STATE" type="xs:string" use="optional"/>
+													
 															<!--NAKAGAMI FADING MODEL-->
 															<xs:attribute name="SHAPE_PARAMETER" type="xs:double" use="optional"/>
 															<xs:attribute name="OMEGA" type="xs:double" use="optional"/>
@@ -997,6 +1134,8 @@
 													</xs:simpleType>
 												</xs:attribute>
 												<xs:attribute name="PRIORITY" type="xs:string" use="optional" />
+												<xs:attribute name="PROTOCOL" type="APP_PROTOCOL" use="optional"/>
+												<xs:attribute name="TRANSPORT_PROTOCOL" type="TRANSPORT_PROTOCOL" use="required"/>
 											</xs:complexType>
 										</xs:element>
 									</xs:sequence>
@@ -1060,6 +1199,10 @@
 												<xs:attribute name="Y1" type="xs:double" use="required"/>
 												<xs:attribute name="X2" type="xs:double" use="required"/>
 												<xs:attribute name="Y2" type="xs:double" use="required"/>
+												<xs:attribute name="FILL_COLOR" type="xs:string" use="required"/>
+												<xs:attribute name="STROKE_COLOR" type="xs:string" use="required"/>
+												<xs:attribute name="HEIGHT" type="xs:string" use="required"/>
+												<xs:attribute name="WIDTH" type="xs:string" use="required"/>
 											</xs:complexType>
 										</xs:element>
 									</xs:sequence>
@@ -1127,6 +1270,8 @@
 															<xs:enumeration value="DESTINATION_IP" />
 															<xs:enumeration value="GATEWAY_IP" />
 															<xs:enumeration value="NEXT_HOP_IP" />
+															<!-- Lte NR Packet trace -->
+															<xs:enumeration value="LTENR_PACKET_INFO" />
 														</xs:restriction>
 													</xs:simpleType>
 												</xs:attribute>
@@ -1242,6 +1387,7 @@
 			<xs:enumeration value="FILE_BASED_MOBILITY"/>
 			<xs:enumeration value="GROUP_MOBILITY"/>
 			<xs:enumeration value="SUMO"/>
+			<xs:enumeration value="PEDESTRIAN_MOBILITY"/>
 		</xs:restriction>
 	</xs:simpleType>
 	<xs:attributeGroup name="CR_PROPERTY">
@@ -1352,6 +1498,7 @@
 					<xs:enumeration value="1.6" />
 					<xs:enumeration value="2" />
 					<xs:enumeration value="8" />
+					<xs:enumeration value="5.3" />
 				</xs:restriction>
 			</xs:simpleType>
 		</xs:attribute>
@@ -1411,7 +1558,7 @@
 		<xs:attribute name="UNIT_BACKOFF_PERIOD_SYMBOLS" type="xs:unsignedByte" use="optional" fixed="20" />
 		<xs:attribute name="MIN_CAP_LENGTH_SYMBOLS" type="xs:unsignedShort" use="optional" fixed="440" />
 		<xs:attribute name="ACK_REQUEST" use="optional" type="TwoOption" />
-		<xs:attribute name="GTS_PERSISTENCE_TIME" type="xs:unsignedByte" use="optional" fixed="4" />
+		<xs:attribute name="GTS_PERSISTENCE_TIME" type="xs:unsignedByte" use="optional"/>
 		<!--Set Sensor properties-->
 		<!--<xs:attribute name="MacAddress" type="xs:string" use="optional" />-->
 		<xs:attribute name="AGENT_COUNT" type="xs:positiveInteger" use="optional" />
@@ -1532,6 +1679,7 @@
 			<xs:enumeration value="ROUND_ROBIN"/>
 			<xs:enumeration value="PROPORTIONAL_FAIR"/>
 			<xs:enumeration value="MAX_THROUGHPUT"/>
+			<xs:enumeration value="FAIR_SCHEDULING"/>
 		</xs:restriction>
 	</xs:simpleType>
 	<xs:attributeGroup name="LTE_PROPERTY">
@@ -1555,7 +1703,7 @@
 		<xs:attribute name="D2D_ENABLE" type="BOOL" use="optional"/>
 	</xs:attributeGroup>
 	<xs:attributeGroup name="ADVANCE_LTE_PROPERTY">
-		<xs:attribute name="CA_TYPE" use="optional">
+		<!-- <xs:attribute name="CA_TYPE" use="optional">
 			<xs:simpleType>
 				<xs:restriction base="xs:string">
 					<xs:enumeration value="INTRA_BAND_CONTIGUOUS_CA"/>
@@ -1563,7 +1711,7 @@
 					<xs:enumeration value="INTRA_BAND_NONCONTIGUOUS_CA"/>
 				</xs:restriction>
 			</xs:simpleType>
-		</xs:attribute>
+		</xs:attribute> -->
 		<xs:attribute name="CA_CONFIGURATION" use="optional" type="xs:string"/>
 		<xs:attribute name="CA_COUNT" use="optional" type="xs:positiveInteger"/>
 	</xs:attributeGroup>
@@ -1780,11 +1928,11 @@
 						<xs:attributeGroup ref="WSN_SINKNODE" />
 					</xs:complexType>
 				</xs:element>
-				<xs:element name="CA" minOccurs="0" maxOccurs="5">
+				<!-- <xs:element name="CA" minOccurs="0" maxOccurs="5">
 					<xs:complexType>
 						<xs:attributeGroup ref ="LTE-A_CA"/>
 					</xs:complexType>
-				</xs:element>
+				</xs:element> -->
 
 				<xs:group ref="LTE_NR_ELEMENT"/>
 
@@ -1799,7 +1947,7 @@
 			<xs:attribute name="MAC_ADDRESS" use="optional">
 				<xs:simpleType>
 					<xs:restriction base="xs:token">
-						<xs:pattern value="[0-9A-F]+" />
+						<xs:pattern value="[0-9a-fA-F]+" />
 						<xs:length value="12" />
 					</xs:restriction>
 				</xs:simpleType>

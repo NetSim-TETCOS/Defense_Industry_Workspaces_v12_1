@@ -75,7 +75,7 @@ void switchtable_metrics_print(PMETRICSWRITER metricsWriter)
 			}
 
 			char heading[BUFSIZ];
-			sprintf(heading, "%s_%d", DEVICE_NAME(i + 1), lan->lanId);
+			sprintf(heading, "%s_%d", DEVICE_NAME(i + 1), j);
 			PMETRICSNODE table = init_metrics_node(MetricsNode_Table, heading, NULL);
 			add_node_to_menu(submenu, table);
 

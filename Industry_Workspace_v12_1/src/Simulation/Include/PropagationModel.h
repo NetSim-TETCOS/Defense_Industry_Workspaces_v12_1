@@ -86,6 +86,8 @@ extern "C" {
 		PATHLOSSMODEL_Indoor_Home,
 		PATHLOSSMODEL_Indoor_Factory,
 		PATHLOSSMODEL_THORP,
+		PATHLOSSMODEL_TWO_RAY,
+		PATHLOSSMODEL_MATRIX_MODEL,
 	}PATHLOSS_MODEL;
 
 	typedef enum
@@ -94,6 +96,7 @@ extern "C" {
 		FADINGMODEL_RICIAN,
 		FADINGMODEL_RAYLEIGH,
 		FADINGMODEL_NAKAGAMI,
+		FADINGMODEL_MARKOV_LOO,
 	}FADING_MODEL;
 
 	typedef enum
@@ -116,13 +119,88 @@ extern "C" {
 
 		//Throp Progation model
 		double spreadCoeff;
+
+		//Path loss matrix model
+		char* MatrixFile;
 	}PATHLOSS_VAR,*PPATHLOSS_VAR;
+
+	/*
+	structure to store consineWaveOscillator
+*/
+	typedef struct stru_oscillator
+	{
+		double amplitude;
+		double phi;
+		double omega;
+	} OSCILLATOR, * ptrOSCILLATOR;
+
+	/*
+		structure to store complex number
+	*/
+	typedef struct stru_complex
+	{
+		double real;
+		double img;
+	}_COMPLEX, * _ptrCOMPLEX;
+
+	/*
+		structure to store complexOscillator
+	*/
+	typedef struct stru_complexOscillator
+	{
+		_COMPLEX amplitude;
+		double phi;
+		double omega;
+	}COMPLEXOSCILLATOR, * ptrCOMPLEXOSCILLATOR;
+
+	typedef struct stru_state_looParam
+	{
+		UINT stateId;
+
+		double directSignalMean_dB;
+		double directSignalStdDeviation_dB;
+		double rmsMultiPathPower_dB;
+		UINT numMultipathOscillators;
+		UINT numDirectSignalOscillators;
+		UINT directSignalDopper_Hz;
+		UINT multipathDoppler_Hz;
+
+		double initialProbability;
+
+		ptrOSCILLATOR directSignalOscillators;
+		ptrCOMPLEXOSCILLATOR multipathOscillators;
+		double sigma;
+	}LOOPARAMS, * ptrLOOPARAMS;
+
+	typedef struct stru_elevation
+	{
+		UINT elevationId;
+		UINT stateCount;
+		ptrLOOPARAMS* looParams;
+
+		double** stateTransitionProbability; // [from state i][to state j]
+
+		UINT activeStateId;
+	}ELEVATION, * ptrELEVATION;
+
+	typedef struct stru_marko_loo_fading_var
+	{
+		UINT elevationCount;
+		ptrELEVATION* elevationPrams;
+
+		UINT activeElevationId;
+	}MARKOVLOO_VAR, * ptrMARLOVLOO_VAR;
 
 	typedef struct stru_fading_var
 	{
+		double coolOffPeriod;
+
 		//Nakagami parameter
 		double shape_parameter; // Range: 0.5-9, default 2
 		double omega; // Range: 0.25-27, default 2
+
+		//Markov parameter
+		ptrMARLOVLOO_VAR markovLooVar;
 
 	}FADING_VAR,*PFADING_VAR;
 
@@ -212,8 +290,6 @@ extern "C" {
 		fnCheckInterface fnpCheckInterface; /* Function pointer to check whether 
 											 * two device is interfering with each other or not
 											 */
-		fnUserPathlossModel fnpUserPathlossModel;
-
 	};
 
 	typedef void* PROPAGATION_HANDLE;
@@ -263,6 +339,11 @@ extern "C" {
 	//Calculate hata suburban path loss.
 	_declspec(dllexport) void propagation_calculate_hata_Suburban(PPROPAGATION_INFO pinfo,
 																  PRECV_POWER p);
+	//Calculate Two Ray path loss
+	_declspec(dllexport) void propagation_calculate_Two_Ray(PPROPAGATION_INFO pinfo,
+		PRECV_POWER p);
+	//Calculate Matrix Model
+	_declspec(dllexport) void propagation_calculate_Matrix_Model(PPROPAGATION_INFO pinfo);
 	//Calculate hata urban path loss.
 	_declspec(dllexport) void propagation_calculate_hata_urban(PPROPAGATION_INFO pinfo,
 															   PRECV_POWER p);
@@ -273,10 +354,6 @@ extern "C" {
 	//Calculate the Thorp path loss
 	_declspec(dllexport) void propagation_calculate_thorpPathLoss(PPROPAGATION_INFO pinfo,
 																  PRECV_POWER p);
-
-	// Set the User pathloss model
-	_declspec(dllexport) void propagation_set_user_pathloss_model(PROPAGATION_HANDLE handle,
-																  __CALLBACK__ fnUserPathlossModel model);
 
 	_declspec(deprecated("get_propagation_info is deprected."))
 		_declspec(dllexport) PPROPAGATION_INFO get_propagation_info(PROPAGATION_HANDLE handle,
@@ -310,6 +387,10 @@ extern "C" {
 	_declspec(dllexport) double propagation_acoutics_calculate_noise(double frequency_kHz,
 																	 double shipping,
 																	 double windSpeed);
+
+	//Loo fading
+	void initLoo(ptrMARLOVLOO_VAR markovLooVar);
+	double calculateLooFadingDB(PPROPAGATION_INFO info);
 
 #ifndef _PROPAGATIONMODEL_
 #pragma deprecated(PROPAGATION_HANDLE)

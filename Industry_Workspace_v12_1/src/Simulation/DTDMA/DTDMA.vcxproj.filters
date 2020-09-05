@@ -14,4 +14,7 @@
     <ClInclude Include="DTDMA.h" />
     <ClInclude Include="DTDMA_enum.h" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="DTDMA.vcxproj.user" />
+  </ItemGroup>
 </Project>

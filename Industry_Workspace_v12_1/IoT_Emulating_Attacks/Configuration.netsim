@@ -3,7 +3,7 @@
 <TETCOS_NETSIM xmlns:ns0="http://www.w3.org/2001/XMLSchema-instance" ns0:noNamespaceSchemaLocation="Configuration.xsd">
   <EXPERIMENT_INFORMATION>
     <VERSION>PRO</VERSION>
-    <NUMBER>12.1</NUMBER>
+    <NUMBER>12.0.18</NUMBER>
     <USER>null</USER>
     <NAME>Experiment</NAME>
     <DATE>Sat Aug 18 17:40:10 IST 2018</DATE>

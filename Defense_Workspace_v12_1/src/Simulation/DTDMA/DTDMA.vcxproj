@@ -32,6 +32,9 @@
     <ClInclude Include="DTDMA.h" />
     <ClInclude Include="DTDMA_enum.h" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="DTDMA.vcxproj.user" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{0D758B56-0FF9-4343-98B6-448C39F6AB99}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>

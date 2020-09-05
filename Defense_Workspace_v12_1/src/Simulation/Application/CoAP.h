@@ -101,12 +101,12 @@ struct stru_NetSim_COAP_Header
 
 COAP_Header* fn_NetSim_Application_COAP_GenrateHeader(APP_COAP_INFO* info);
 
-void fn_NetSim_Application_COAP_AppIn(APP_INFO* pstruappinfo, NetSim_PACKET* pstruPacket);
+void fn_NetSim_Application_COAP_AppIn(ptrAPPLICATION_INFO pstruappinfo, NetSim_PACKET* pstruPacket);
 
-int fn_NetSim_Application_COAP_Start(APP_INFO* appInfo, NetSim_EVENTDETAILS* pstruEventDetails);
-int fn_NetSim_Application_StartCOAPAPP(APP_INFO* appInfo, double time);
-int fn_NetSim_Application_COAP_ProcessRequest(APP_INFO* pstruappinfo, NetSim_PACKET* pstruPacket);
-int fn_NetSim_Application_COAP_Sent_ACK(APP_INFO* pstruappinfo, NetSim_PACKET* pstruPacket);
-int fn_NetSim_Application_COAP_Genrate_RequestPacket(APP_INFO* appInfo, NETSIM_ID nSource, NETSIM_ID nDestination, double time, char* PacketType);
-int fn_NetSim_Application_COAP_Genrate_Packet(APP_INFO* pstruappinfo, NETSIM_ID nSourceId, NETSIM_ID nDestinationId, double size, char* PacketType);
+int fn_NetSim_Application_COAP_Start(ptrAPPLICATION_INFO appInfo, NetSim_EVENTDETAILS* pstruEventDetails);
+int fn_NetSim_Application_StartCOAPAPP(ptrAPPLICATION_INFO appInfo, double time);
+int fn_NetSim_Application_COAP_ProcessRequest(ptrAPPLICATION_INFO pstruappinfo, NetSim_PACKET* pstruPacket);
+int fn_NetSim_Application_COAP_Sent_ACK(ptrAPPLICATION_INFO pstruappinfo, NetSim_PACKET* pstruPacket);
+int fn_NetSim_Application_COAP_Genrate_RequestPacket(ptrAPPLICATION_INFO appInfo, NETSIM_ID nSource, NETSIM_ID nDestination, double time, char* PacketType);
+int fn_NetSim_Application_COAP_Genrate_Packet(ptrAPPLICATION_INFO pstruappinfo, NETSIM_ID nSourceId, NETSIM_ID nDestinationId, double size, char* PacketType);
 COAP_Header* fn_NetSim_Application_COAP_CopyHeader(COAP_Header* src);

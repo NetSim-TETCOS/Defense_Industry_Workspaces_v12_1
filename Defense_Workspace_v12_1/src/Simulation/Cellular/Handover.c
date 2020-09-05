@@ -105,7 +105,7 @@ int fn_NetSim_Cellular_DropCall()
 	unsigned int nProtocol=pstruEventDetails->nProtocolId;
 	unsigned int nSubevent=pstruEventDetails->nSubEventType;
 	Cellular_MS_MAC* MSMac=DEVICE_MACVAR(pstruEventDetails->nDeviceId,pstruEventDetails->nInterfaceId);
-	APP_INFO* appInfo=((APP_INFO**)NETWORK->appInfo)[MSMac->nApplicationId-1];
+	ptrAPPLICATION_INFO appInfo=((ptrAPPLICATION_INFO*)NETWORK->appInfo)[MSMac->nApplicationId-1];
 	MSMac->nMSStatusFlag=Status_IDLE;
 	if(MSMac->pstruAllocatedChannel==NULL)
 		return 1;

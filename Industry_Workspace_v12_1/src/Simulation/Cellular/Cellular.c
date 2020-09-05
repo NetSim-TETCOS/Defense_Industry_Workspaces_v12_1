@@ -353,7 +353,7 @@ int fn_NetSim_Cellular_ChannelResponse(NetSim_PACKET* packet)
 		unsigned int nProtocol=pstruEventDetails->nProtocolId;
 		Cellular_CHANNEL* channel=response->channel;
 		NetSim_PACKET* packet=MSMac->pstruPacketList[channel->nApplicationId][channel->nMSId-1][channel->nDestId-1];
-		APP_INFO** appInfo=(APP_INFO**)NETWORK->appInfo;
+		ptrAPPLICATION_INFO* appInfo=(ptrAPPLICATION_INFO*)NETWORK->appInfo;
 		APP_CALL_INFO* info=appInfo[packet->pstruAppData->nApplicationId-1]->appData;
 		info->fn_BlockCall(appInfo[packet->pstruAppData->nApplicationId-1],
 						   packet->nSourceId,
@@ -612,7 +612,7 @@ int fn_NetSim_Cellular_MS_ProcessCallResponse()
 			double time=pstruEventDetails->dEventTime;
 			Cellular_CHANNEL* channel=MSMac->pstruAllocatedChannel;
 			NetSim_PACKET* packet=MSMac->pstruPacketList[channel->nApplicationId][channel->nMSId-1][channel->nDestId-1];
-			APP_INFO** appInfo=(APP_INFO**)NETWORK->appInfo;
+			ptrAPPLICATION_INFO* appInfo=(ptrAPPLICATION_INFO*)NETWORK->appInfo;
 			APP_CALL_INFO* info=appInfo[packet->pstruAppData->nApplicationId-1]->appData;
 			info->fn_BlockCall(appInfo[packet->pstruAppData->nApplicationId-1],
 							   packet->nSourceId,

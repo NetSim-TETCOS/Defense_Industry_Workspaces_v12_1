@@ -11,4 +11,7 @@
     <ClInclude Include="Aloha.h" />
     <ClInclude Include="Aloha_enum.h" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Aloha.vcxproj.user" />
+  </ItemGroup>
 </Project>

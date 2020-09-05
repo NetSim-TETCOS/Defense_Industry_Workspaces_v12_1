@@ -26,7 +26,7 @@ int fn_NetSim_CR_CreateServiceFlow(NETSIM_ID nDeviceId,NETSIM_ID nInterfaceId,in
 			appid = 0;
 		if(appid)
 		{
-			generationrate = (int)ceil((((APP_INFO**)NETWORK->appInfo)[appid-1]->dGenerationRate*1000000));
+			generationrate = (int)ceil((((ptrAPPLICATION_INFO*)NETWORK->appInfo)[appid-1]->dGenerationRate*1000000));
 		}
 		pstruPacket = fn_NetSim_Packet_CreatePacket(MAC_LAYER);
 		pstruPacket->nControlDataType = CR_CONTROL_PACKET(MMM_DSA_REQ);

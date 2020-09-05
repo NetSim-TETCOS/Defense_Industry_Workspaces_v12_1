@@ -14,7 +14,7 @@
 #include "Application.h"
 #include "../IP/IP.h"
 
-void add_multicast_route(APP_INFO* info)
+void add_multicast_route(ptrAPPLICATION_INFO info)
 {
 	NETSIM_ID i;
 	NETSIM_ID dev;
@@ -77,7 +77,7 @@ static void call_ip_to_join_group(NETSIM_ID d, NETSIM_IPAddress ip,double time)
 	fnpAddEvent(&pevent);
 }
 
-void join_multicast_group(APP_INFO* info, double time)
+void join_multicast_group(ptrAPPLICATION_INFO info, double time)
 {
 	NETSIM_IPAddress ip = info->multicastDestIP;
 	UINT i;

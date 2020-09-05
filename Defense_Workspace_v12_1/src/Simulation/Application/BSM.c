@@ -40,7 +40,7 @@ int fn_NetSim_Application_BSM(PAPP_BSM_INFO info,
 }
 
 /** This function is used to start the Database, FTP and Custom applications */
-int fn_NetSim_Application_StartBSM(APP_INFO* appInfo, double time)
+int fn_NetSim_Application_StartBSM(ptrAPPLICATION_INFO appInfo, double time)
 {
 	PAPP_BSM_INFO info = (PAPP_BSM_INFO)appInfo->appData;
 
@@ -101,7 +101,7 @@ int fn_NetSim_Application_StartBSM(APP_INFO* appInfo, double time)
  * An User can modify these function to implement Vanet packet type.
  */
 
-bool add_sae_j2735_payload(NetSim_PACKET* packet, APP_INFO* info)
+bool add_sae_j2735_payload(NetSim_PACKET* packet, ptrAPPLICATION_INFO info)
 {
 	// Add the payload based on SAE J2735 or any other standard
 	// return true after adding.

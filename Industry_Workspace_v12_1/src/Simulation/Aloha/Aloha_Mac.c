@@ -131,7 +131,7 @@ static void aloha_resend_packet()
 	}
 
 	int window = (int)pow(2, mac->retryCount) - 1;
-	int backoffCounter = (int)((window*rand()*1.0) / RAND_MAX);
+	int backoffCounter = (int)floor(window * NETSIM_RAND_01());
 	double waitTime = mac->slotlength;
 	waitTime *= backoffCounter;
 	assert(waitTime >= 0.0);

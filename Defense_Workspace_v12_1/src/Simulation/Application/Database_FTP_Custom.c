@@ -79,7 +79,7 @@ _declspec(dllexport) int fn_NetSim_TrafficGenerator_Custom(APP_DATA_INFO* info,
 }
 
 /** This function is used to start the Database, FTP and Custom applications */
-int fn_NetSim_Application_StartDataAPP(APP_INFO* appInfo, double time)
+int fn_NetSim_Application_StartDataAPP(ptrAPPLICATION_INFO appInfo, double time)
 {
 	APP_DATA_INFO* info = (APP_DATA_INFO*)appInfo->appData;
 
@@ -114,7 +114,10 @@ int fn_NetSim_Application_StartDataAPP(APP_INFO* appInfo, double time)
 	
 	if(!appInfo->nPacketId)
 		arrivalTime = 0; // Based on feedback from an impotant customer. This can be modified to start between O to IAT since no network starts
-	// tranmitting packet at time 0. 
+						// tranmitting packet at time 0.
+
+	if (appInfo->dEndTime <= time + arrivalTime) return 0; // Next packet generation rate is after end time
+
 	pstruEventDetails->dEventTime = time + arrivalTime;
 	pstruEventDetails->dPacketSize = packetSize;
 	pstruEventDetails->nApplicationId = appInfo->id;

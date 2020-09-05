@@ -1,16 +1,26 @@
 /************************************************************************************
- * Copyright (C) 2014                                                               *
- * TETCOS, Bangalore. India                                                         *
- *                                                                                  *
- * Tetcos owns the intellectual property rights in the Product and its content.     *
- * The copying, redistribution, reselling or publication of any or all of the       *
- * Product or its content without express prior written consent of Tetcos is        *
- * prohibited. Ownership and / or any other right relating to the software and all  *
- * intellectual property rights therein shall remain at all times with Tetcos.      *
- *                                                                                  *
- * Author:    Shashi Kant Suman                                                     *
- *                                                                                  *
- * ---------------------------------------------------------------------------------*/
+* Copyright (C) 2020																*
+* TETCOS, Bangalore. India															*
+*																					*
+* Tetcos owns the intellectual property rights in the Product and its content.		*
+* The copying, redistribution, reselling or publication of any or all of the		*
+* Product or its content without express prior written consent of Tetcos is			*
+* prohibited. Ownership and / or any other right relating to the software and all	*
+* intellectual property rights therein shall remain at all times with Tetcos.		*
+*																					*
+* This source code is licensed per the NetSim license agreement.					*
+*																					*
+* No portion of this source code may be used as the basis for a derivative work,	*
+* or used, for any purpose other than its intended use per the NetSim license		*
+* agreement.																		*
+*																					*
+* This source code and the algorithms contained within it are confidential trade	*
+* secrets of TETCOS and may not be used as the basis for any other software,		*
+* hardware, product or service.														*
+*																					*
+* Author:    Shashi Kant Suman	                                                    *
+*										                                            *
+* ----------------------------------------------------------------------------------*/
 #ifndef _NETSIM_APPLICATION_H_
 #define _NETSIM_APPLICATION_H_
 
@@ -28,7 +38,7 @@
 #define RANDOM_STARTUP_DELAY				0.1*SECOND
 
 unsigned int nApplicationCount;
-typedef struct stru_Application_Info APP_INFO;
+
 typedef struct stru_Application_DataInfo APP_DATA_INFO;
 typedef struct stru_Application_VoiceInfo APP_VOICE_INFO;
 typedef struct stru_Application_VideoInfo APP_VIDEO_INFO;
@@ -83,7 +93,7 @@ struct stru_SocketInfo
 };
 #define SOCKETINFO_ALLOC() (struct stru_SocketInfo*)list_alloc(sizeof(struct stru_SocketInfo),offsetof(struct stru_SocketInfo,ele))
 /// Structure to store application information
-struct stru_Application_Info
+typedef struct stru_Application_Info
 {
 	//config variable
 	NETSIM_ID id;
@@ -100,6 +110,7 @@ struct stru_Application_Info
 	char* name;
 	QUALITY_OF_SERVICE qos;
 	TRANSPORT_LAYER_PROTOCOL trxProtocol;
+	APPLICATION_LAYER_PROTOCOL protocol;
 
 	unsigned long long int nPacketId;
 	UINT16 sourcePort;
@@ -120,9 +131,8 @@ struct stru_Application_Info
 
 	//Multicast application
 	NETSIM_IPAddress multicastDestIP;
-
-};
-APP_INFO** appInfo;
+}APPLICATION_INFO, * ptrAPPLICATION_INFO;
+ptrAPPLICATION_INFO* applicationInfo;
 
 /// Structure for Data information such as packet size and inter arrival time,this is applicable for custom,FTP,Database Traffic
 struct stru_Application_DataInfo
@@ -282,14 +292,14 @@ struct stru_Application_CallInfo
 
 	unsigned long long int** nEventId;
 	unsigned long long int** nAppoutevent;
-	int(*fn_BlockCall)(APP_INFO* appInfo, NETSIM_ID nSourceId, NETSIM_ID nDestinationId, double time);
+	int(*fn_BlockCall)(ptrAPPLICATION_INFO appInfo, NETSIM_ID nSourceId, NETSIM_ID nDestinationId, double time);
 };
 
 //For Email.c
 typedef struct stru_email_detail
 {
 	int type;
-	APP_INFO* appInfo;
+	ptrAPPLICATION_INFO appInfo;
 }DETAIL;
 
 #include "NetSim_Plot.h"
@@ -301,7 +311,7 @@ struct stru_GenericPlot** genericAppPlot;
 bool* nAppPlotFlag;
 double* dPayloadReceived;
 
-NetSim_PACKET* fn_NetSim_Application_GeneratePacket(APP_INFO* info,
+NetSim_PACKET* fn_NetSim_Application_GeneratePacket(ptrAPPLICATION_INFO info,
 													double ldArrivalTime,
 													NETSIM_ID nSourceId,
 													UINT destCount,
@@ -312,7 +322,7 @@ NetSim_PACKET* fn_NetSim_Application_GeneratePacket(APP_INFO* info,
 													unsigned int sourcePort,
 													unsigned int destPort);
 
-int fn_NetSim_Application_GenerateNextPacket(APP_INFO* appInfo,
+int fn_NetSim_Application_GenerateNextPacket(ptrAPPLICATION_INFO appInfo,
 											 NETSIM_ID nSource,
 											 UINT destCount,
 											 NETSIM_ID* nDestination,
@@ -326,18 +336,18 @@ _declspec(dllexport) int fnDistribution(DISTRIBUTION nDistributionType, double *
 _declspec(dllexport) int fnRandomNo(long lm, double *fRandNo, unsigned long *uSeed, unsigned long *uSeed1);
 
 /* HTTP Application */
-int fn_NetSim_Application_StartHTTPAPP(APP_INFO* appInfo, double time);
-int fn_NetSim_Application_ConfigureHTTPTraffic(APP_INFO* appInfo, void* xmlNetSimNode);
-int fn_NetSim_Application_HTTP_ProcessRequest(APP_INFO* pstruappinfo, NetSim_PACKET* pstruPacket);
+int fn_NetSim_Application_StartHTTPAPP(ptrAPPLICATION_INFO appInfo, double time);
+int fn_NetSim_Application_ConfigureHTTPTraffic(ptrAPPLICATION_INFO appInfo, void* xmlNetSimNode);
+int fn_NetSim_Application_HTTP_ProcessRequest(ptrAPPLICATION_INFO pstruappinfo, NetSim_PACKET* pstruPacket);
 
 /* COAP Application*/
-int fn_NetSim_Application_StartCOAPAPP(APP_INFO* appInfo, double time);
-int fn_NetSim_Application_ConfigureCOAPTraffic(APP_INFO* appInfo, void* xmlNetSimNode);
-int fn_NetSim_Application_COAP_ProcessRequest(APP_INFO* pstruappinfo, NetSim_PACKET* pstruPacket);
+int fn_NetSim_Application_StartCOAPAPP(ptrAPPLICATION_INFO appInfo, double time);
+int fn_NetSim_Application_ConfigureCOAPTraffic(ptrAPPLICATION_INFO appInfo, void* xmlNetSimNode);
+int fn_NetSim_Application_COAP_ProcessRequest(ptrAPPLICATION_INFO pstruappinfo, NetSim_PACKET* pstruPacket);
 
 /* Video Application */
-int fn_NetSim_Application_StartVideoAPP(APP_INFO* appInfo, double time);
-int fn_NetSim_Application_ConfigureVideoTraffic(APP_INFO* appInfo, void* xmlNetSimNode);
+int fn_NetSim_Application_StartVideoAPP(ptrAPPLICATION_INFO appInfo, double time);
+int fn_NetSim_Application_ConfigureVideoTraffic(ptrAPPLICATION_INFO appInfo, void* xmlNetSimNode);
 _declspec(dllexport) int fn_NetSim_TrafficGenerator_Video(APP_VIDEO_INFO* info,
 														  double* fPacketSize,
 														  double* ldArrival,
@@ -347,8 +357,8 @@ _declspec(dllexport) int fn_NetSim_TrafficGenerator_Video(APP_VIDEO_INFO* info,
 														  unsigned long* uSeed3);
 
 /* Voice Application */
-int fn_NetSim_Application_StartVoiceAPP(APP_INFO* appInfo, double time);
-int fn_NetSim_Application_ConfigureVoiceTraffic(APP_INFO* appInfo, void* xmlNetSimNode);
+int fn_NetSim_Application_StartVoiceAPP(ptrAPPLICATION_INFO appInfo, double time);
+int fn_NetSim_Application_ConfigureVoiceTraffic(ptrAPPLICATION_INFO appInfo, void* xmlNetSimNode);
 _declspec(dllexport) int fn_NetSim_TrafficGenerator_Voice(APP_VOICE_INFO* info,
 														  double* fSize,
 														  double* ldArrival,
@@ -358,24 +368,25 @@ _declspec(dllexport) int fn_NetSim_TrafficGenerator_Voice(APP_VOICE_INFO* info,
 														  unsigned long* uSeed3);
 
 /* Peer To Peer Application */
-int fn_NetSim_Application_P2P_GenerateFile(APP_INFO* appInfo);
-int fn_NetSim_Application_P2P_InitSeederList(APP_INFO* appInfo);
-int fn_NetSim_Application_P2P_InitPeers(APP_INFO* appInfo);
-int fn_NetSim_Application_P2P_SendNextPiece(APP_INFO* appInfo, NETSIM_ID destination, double time);
-int fn_NetSim_Application_StartP2PAPP(APP_INFO* appInfo, double time);
-int fn_NetSim_Application_ConfigureP2PTraffic(APP_INFO* appInfo, void* xmlNetSimNode);
-int fn_NetSim_Application_P2P_MarkReceivedPacket(APP_INFO* pstruappinfo, NetSim_PACKET* pstruPacket);
+int fn_NetSim_Application_P2P_GenerateFile(ptrAPPLICATION_INFO appInfo);
+int fn_NetSim_Application_P2P_InitSeederList(ptrAPPLICATION_INFO appInfo);
+int fn_NetSim_Application_P2P_InitPeers(ptrAPPLICATION_INFO appInfo);
+int fn_NetSim_Application_P2P_SendNextPiece(ptrAPPLICATION_INFO appInfo, NETSIM_ID destination, double time);
+int fn_NetSim_Application_StartP2PAPP(ptrAPPLICATION_INFO appInfo, double time);
+int fn_NetSim_Application_ConfigureP2PTraffic(ptrAPPLICATION_INFO appInfo, void* xmlNetSimNode);
+int fn_NetSim_Application_P2P_MarkReceivedPacket(ptrAPPLICATION_INFO pstruappinfo, NetSim_PACKET* pstruPacket);
 
 /* Email Application */
-int fn_NetSim_Application_StartEmailAPP(APP_INFO* appInfo, double time);
-int fn_NetSim_Application_ConfigureEmailTraffic(APP_INFO* appInfo, void* xmlNetSimNode);
-APP_INFO* fn_NetSim_Application_Email_GenerateNextPacket(DETAIL* detail, NETSIM_ID nSourceId, NETSIM_ID nDestinationId, double time);
+int fn_NetSim_Application_StartEmailAPP(ptrAPPLICATION_INFO appInfo, double time);
+int fn_NetSim_Application_ConfigureEmailTraffic(ptrAPPLICATION_INFO appInfo, void* xmlNetSimNode);
+ptrAPPLICATION_INFO fn_NetSim_Application_Email_GenerateNextPacket(DETAIL* detail, NETSIM_ID nSourceId, NETSIM_ID nDestinationId, double time);
+ptrAPPLICATION_INFO get_email_app_info(void* detail);
 
 /* Custom, FTP, Database Application */
-int fn_NetSim_Application_StartDataAPP(APP_INFO* appInfo, double time);
-int fn_NetSim_Application_ConfigureDataTraffic(APP_INFO* appInfo, void* xmlNetSimNode);
-int fn_NetSim_Application_ConfigureDatabaseTraffic(APP_INFO* appInfo, void* xmlNetSimNode);
-int fn_NetSim_Application_ConfigureFTPTraffic(APP_INFO* appInfo, void* xmlNetSimNode);
+int fn_NetSim_Application_StartDataAPP(ptrAPPLICATION_INFO appInfo, double time);
+int fn_NetSim_Application_ConfigureDataTraffic(ptrAPPLICATION_INFO appInfo, void* xmlNetSimNode);
+int fn_NetSim_Application_ConfigureDatabaseTraffic(ptrAPPLICATION_INFO appInfo, void* xmlNetSimNode);
+int fn_NetSim_Application_ConfigureFTPTraffic(ptrAPPLICATION_INFO appInfo, void* xmlNetSimNode);
 _declspec(dllexport) int fn_NetSim_TrafficGenerator_Custom(APP_DATA_INFO* info,
 														   double* fSize,
 														   double* ldArrival,
@@ -387,15 +398,15 @@ _declspec(dllexport) int fn_NetSim_TrafficGenerator_Custom(APP_DATA_INFO* info,
 /* Erlang Call */
 int fn_NetSim_Application_ErlangCall_StartCall(NetSim_EVENTDETAILS* pstruEventDetails);
 int fn_NetSim_Application_ErlangCall_EndCall(NetSim_EVENTDETAILS* pstruEventDetails);
-int fn_NetSim_Application_StartErlangCallAPP(APP_INFO* appInfo, double time);
-int fn_NetSim_Application_ConfigureErlangCallTraffic(APP_INFO* appInfo, void* xmlNetSimNode);
+int fn_NetSim_Application_StartErlangCallAPP(ptrAPPLICATION_INFO appInfo, double time);
+int fn_NetSim_Application_ConfigureErlangCallTraffic(ptrAPPLICATION_INFO appInfo, void* xmlNetSimNode);
 
 /* Emulation */
-int fn_NetSim_Application_ConfigureEmulationTraffic(APP_INFO* appInfo, void* xmlNetSimNode);
-void fn_NetSim_Emulation_StartApplication(APP_INFO* appInfo);
+int fn_NetSim_Application_ConfigureEmulationTraffic(ptrAPPLICATION_INFO appInfo, void* xmlNetSimNode);
+void fn_NetSim_Emulation_StartApplication(ptrAPPLICATION_INFO appInfo);
 
 /* Vanet Application*/
-int fn_NetSim_Application_StartBSM(APP_INFO* appInfo, double time);
+int fn_NetSim_Application_StartBSM(ptrAPPLICATION_INFO appInfo, double time);
 int fn_NetSim_Application_BSM(PAPP_BSM_INFO info,
 							  double* fSize,
 							  double* ldArrival,
@@ -403,12 +414,12 @@ int fn_NetSim_Application_BSM(PAPP_BSM_INFO info,
 							  unsigned long* uSeed1,
 							  unsigned long* uSeed2,
 							  unsigned long* uSeed3);
-bool add_sae_j2735_payload(NetSim_PACKET* packet, APP_INFO* info);
+bool add_sae_j2735_payload(NetSim_PACKET* packet, ptrAPPLICATION_INFO info);
 void process_saej2735_packet(NetSim_PACKET* packet);
 
 //Multicast
-void add_multicast_route(APP_INFO* info);
-void join_multicast_group(APP_INFO* info, double time);
+void add_multicast_route(ptrAPPLICATION_INFO info);
+void join_multicast_group(ptrAPPLICATION_INFO info, double time);
 
 
 /* Application API's */
@@ -431,20 +442,24 @@ ptrSOCKETINTERFACE fnGetSocket(NETSIM_ID nAppId,
 							   NETSIM_ID nDestPort);
 
 //Application metrics
-void free_app_metrics(APP_INFO* appInfo);
-void appmetrics_src_add(APP_INFO* appInfo, NetSim_PACKET* packet);
-void appmetrics_dest_add(APP_INFO* appInfo, NetSim_PACKET* packet, NETSIM_ID dest);
+void free_app_metrics(ptrAPPLICATION_INFO appInfo);
+void appmetrics_src_add(ptrAPPLICATION_INFO appInfo, NetSim_PACKET* packet);
+void appmetrics_dest_add(ptrAPPLICATION_INFO appInfo, NetSim_PACKET* packet, NETSIM_ID dest);
 int fn_NetSim_Application_Metrics_F(PMETRICSWRITER metricsWriter);
 
 
 //Application Interface function
-void fnCreatePort(APP_INFO* info);
-int fnCreateSocketBuffer(APP_INFO* appInfo);
+void fnCreatePort(ptrAPPLICATION_INFO info);
+int fnCreateSocketBuffer(ptrAPPLICATION_INFO appInfo);
 
-int fn_NetSim_Add_DummyPayload(NetSim_PACKET* packet, APP_INFO*);
+int fn_NetSim_Add_DummyPayload(NetSim_PACKET* packet, ptrAPPLICATION_INFO);
 
 //Encryption
 char xor_encrypt(char ch, long key);
 int aes256(char* str, int* len);
 int des(char* buf, int* len);
+
+//Application event handler
+void handle_app_out();
+
 #endif

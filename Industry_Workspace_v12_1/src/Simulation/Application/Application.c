@@ -1,19 +1,30 @@
 /************************************************************************************
-* Copyright (C) 2014                                                               *
-* TETCOS, Bangalore. India                                                         *
-*                                                                                  *
-* Tetcos owns the intellectual property rights in the Product and its content.     *
-* The copying, redistribution, reselling or publication of any or all of the       *
-* Product or its content without express prior written consent of Tetcos is        *
-* prohibited. Ownership and / or any other right relating to the software and all  *
-* intellectual property rights therein shall remain at all times with Tetcos.      *
-*                                                                                  *
-* Author:    Shashi Kant Suman                                                     *
-*                                                                                  *
-* ---------------------------------------------------------------------------------*/
+* Copyright (C) 2020																*
+* TETCOS, Bangalore. India															*
+*																					*
+* Tetcos owns the intellectual property rights in the Product and its content.		*
+* The copying, redistribution, reselling or publication of any or all of the		*
+* Product or its content without express prior written consent of Tetcos is			*
+* prohibited. Ownership and / or any other right relating to the software and all	*
+* intellectual property rights therein shall remain at all times with Tetcos.		*
+*																					*
+* This source code is licensed per the NetSim license agreement.					*
+*																					*
+* No portion of this source code may be used as the basis for a derivative work,	*
+* or used, for any purpose other than its intended use per the NetSim license		*
+* agreement.																		*
+*																					*
+* This source code and the algorithms contained within it are confidential trade	*
+* secrets of TETCOS and may not be used as the basis for any other software,		*
+* hardware, product or service.														*
+*																					*
+* Author:    Shashi Kant Suman	                                                    *
+*										                                            *
+* ----------------------------------------------------------------------------------*/
 #include "main.h"
 #include "Application.h"
 #include "CoAP.h"
+
 /** 
 This function is used to initialize the parameter for all the application based on 
 the traffic type 
@@ -49,119 +60,7 @@ _declspec (dllexport) int fn_NetSim_Application_Run()
 	switch(pstruEventDetails->nEventType)
 	{
 	case APPLICATION_OUT_EVENT:
-		{
-			ptrSOCKETINTERFACE s;
-			int nSegmentCount=0;
-			double ldEventTime=pstruEventDetails->dEventTime;
-			APP_INFO* appInfo=(APP_INFO*)pstruEventDetails->szOtherDetails;
-			NETSIM_ID nDeviceId = pstruEventDetails->nDeviceId;
-			NetSim_PACKET* pstruPacket=pstruEventDetails->pPacket;
-			if(pstruPacket)
-			{
-				APPLICATION_TYPE nappType=pstruPacket->pstruAppData->nAppType;
-				UINT destCount;
-				NETSIM_ID* dest = get_dest_from_packet(pstruPacket, &destCount);
-				s = fnGetSocket(pstruEventDetails->nApplicationId,
-										  pstruPacket->nSourceId,
-										  destCount,
-										  dest,
-										  pstruPacket->pstruTransportData->nSourcePort,
-										  pstruPacket->pstruTransportData->nDestinationPort);
-				if(!s)
-					fnNetSimError("Socket is NULL for application %d.\n",
-								  pstruEventDetails->nApplicationId);
-				//Initialize the application data
-				pstruPacket->pstruAppData->dArrivalTime = ldEventTime;
-				pstruPacket->pstruAppData->dEndTime = ldEventTime;
-				if(pstruPacket->nPacketType!=PacketType_Control)
-				{
-					pstruPacket->pstruAppData->dOverhead = 0;
-					pstruPacket->pstruAppData->dPayload = pstruEventDetails->dPacketSize;
-				}
-				else
-				{
-					pstruPacket->pstruAppData->dPayload = 0;
-					pstruPacket->pstruAppData->dOverhead = pstruEventDetails->dPacketSize;
-				}
-				pstruPacket->pstruAppData->dPacketSize = pstruPacket->pstruAppData->dOverhead+pstruPacket->pstruAppData->dPayload;
-				pstruPacket->pstruAppData->dStartTime = ldEventTime;
-				pstruPacket->pstruAppData->nApplicationId = pstruEventDetails->nApplicationId;
-				if(!fn_NetSim_Socket_GetBufferStatus(s))
-				{
-					//Socket buffer is NULL
-					//Create event for transport out
-					pstruEventDetails->dEventTime = ldEventTime;
-					pstruEventDetails->nEventType = TRANSPORT_OUT_EVENT;
-					pstruEventDetails->pPacket = NULL;
-					pstruEventDetails->nProtocolId = fn_NetSim_Stack_GetTrnspProtocol(nDeviceId,pstruPacket);
-#pragma warning(disable:4312)
-					pstruEventDetails->szOtherDetails=(void*)s;
-#pragma warning(default:4312)
-					//Add Transport out event
-					fnpAddEvent(pstruEventDetails);
-				}
-				//Fragment the packet
-				nSegmentCount=fn_NetSim_Stack_FragmentPacket(pstruPacket,(int)fn_NetSim_Stack_GetMSS(pstruPacket));
-				if(nappType==TRAFFIC_FTP || nappType==TRAFFIC_DATABASE)
-				{
-					NetSim_PACKET* packet=pstruPacket;
-					while(packet->pstruNextPacket)
-						packet=packet->pstruNextPacket;
-					packet->pstruAppData->nAppEndFlag=1;
-					fn_NetSim_Application_StartDataAPP(appInfo, pstruEventDetails->dEventTime);
-				}
-				else if(nappType==TRAFFIC_HTTP)
-				{
-					//Do nothing
-					NetSim_PACKET* packet=pstruPacket;
-					if(pstruPacket->pstruAppData->nAppEndFlag)
-					{
-						while(packet->pstruNextPacket)
-						{
-							packet->pstruAppData->nAppEndFlag=0;
-							packet=packet->pstruNextPacket;
-						}
-						packet->pstruAppData->nAppEndFlag=1;
-					}
-				}
-				else if (nappType == TRAFFIC_COAP)
-				{
-					//DO nothing
-				}
-				else if(nappType==TRAFFIC_EMAIL)
-				{
-					appInfo = fn_NetSim_Application_Email_GenerateNextPacket((DETAIL*)appInfo,
-																			 pstruPacket->nSourceId,
-																			 get_first_dest_from_packet(pstruPacket),
-																			 pstruEventDetails->dEventTime);
-				}
-				else if(nappType==TRAFFIC_PEER_TO_PEER)
-				{
-					NetSim_PACKET* packet=pstruPacket;
-					while(packet->pstruNextPacket)
-						packet=packet->pstruNextPacket;
-					packet->pstruAppData->nAppEndFlag=1;
-				}
-				else if(nappType == TRAFFIC_EMULATION)
-				{
-					//do nothing
-				}
-				else
-				{
-					fn_NetSim_Application_GenerateNextPacket(appInfo,
-															 pstruPacket->nSourceId,
-															 destCount,
-															 dest,
-															 pstruEventDetails->dEventTime);
-				}
-
-				//Add the dummy payload to packet
-				fn_NetSim_Add_DummyPayload(pstruPacket,appInfo);
-				//Place the packet to socket buffer
-				fn_NetSim_Socket_PassPacketToInterface(nDeviceId, pstruPacket, s);
-				appmetrics_src_add(appInfo,pstruPacket);
-			}
-		}
+		handle_app_out();
 		break;
 	case APPLICATION_IN_EVENT:
 		{
@@ -169,9 +68,9 @@ _declspec (dllexport) int fn_NetSim_Application_Run()
 			if(pstruPacket->nPacketType != PacketType_Control && pstruPacket->pstruAppData->nApplicationId && 
 				pstruPacket->nControlDataType/100 != PROTOCOL_APPLICATION)
 			{
-				APP_INFO* pstruappinfo;
+				ptrAPPLICATION_INFO pstruappinfo;
 				fnValidatePacket(pstruPacket);
-				pstruappinfo=appInfo[pstruPacket->pstruAppData->nApplicationId-1];
+				pstruappinfo=applicationInfo[pstruPacket->pstruAppData->nApplicationId-1];
 				pstruPacket->pstruAppData->dEndTime = pstruEventDetails->dEventTime;
 				fn_NetSim_Application_Plot(pstruPacket);
 				appmetrics_dest_add(pstruappinfo, pstruPacket, pstruEventDetails->nDeviceId);
@@ -194,9 +93,9 @@ _declspec (dllexport) int fn_NetSim_Application_Run()
 			// Here which type is placed is only getting processed next one is not getting processed
 			else if (pstruPacket->nControlDataType == packet_COAP_REQUEST)
 			{
-				APP_INFO* pstruappinfo;
+				ptrAPPLICATION_INFO pstruappinfo;
 				fnValidatePacket(pstruPacket);
-				pstruappinfo = appInfo[pstruPacket->pstruAppData->nApplicationId - 1];
+				pstruappinfo = applicationInfo[pstruPacket->pstruAppData->nApplicationId - 1];
 				pstruPacket->pstruAppData->dEndTime = pstruEventDetails->dEventTime;
 				//On receiving COAP Packet 
 				appmetrics_dest_add(pstruappinfo, pstruPacket, pstruEventDetails->nDeviceId);
@@ -208,9 +107,9 @@ _declspec (dllexport) int fn_NetSim_Application_Run()
 			}
 			else if(pstruPacket->nControlDataType == packet_HTTP_REQUEST)
 			{
-				APP_INFO* pstruappinfo;
+				ptrAPPLICATION_INFO pstruappinfo;
 				fnValidatePacket(pstruPacket);
-				pstruappinfo=appInfo[pstruPacket->pstruAppData->nApplicationId-1];
+				pstruappinfo=applicationInfo[pstruPacket->pstruAppData->nApplicationId-1];
 				pstruPacket->pstruAppData->dEndTime = pstruEventDetails->dEventTime;
 				appmetrics_dest_add(pstruappinfo, pstruPacket, pstruEventDetails->nDeviceId);
 				fn_NetSim_Application_HTTP_ProcessRequest(pstruappinfo,pstruPacket);
@@ -243,7 +142,7 @@ _declspec (dllexport) int fn_NetSim_Application_Run()
 				case TRAFFIC_COAP:
 				{
 
-					APP_INFO* appInfo = (APP_INFO*)pstruEventDetails->szOtherDetails;
+					ptrAPPLICATION_INFO appInfo = (ptrAPPLICATION_INFO)pstruEventDetails->szOtherDetails;
 					APP_COAP_INFO* info = appInfo->appData;
 					
 					pstruEventDetails->nEventType = APPLICATION_OUT_EVENT;
@@ -272,7 +171,7 @@ _declspec (dllexport) int fn_NetSim_Application_Run()
 				break;
 				case TRAFFIC_ERLANG_CALL:
 					{
-						APP_INFO* appInfo=(APP_INFO*)pstruEventDetails->szOtherDetails;
+						ptrAPPLICATION_INFO appInfo=(ptrAPPLICATION_INFO)pstruEventDetails->szOtherDetails;
 						pstruEventDetails->nEventType=APPLICATION_OUT_EVENT;
 						pstruEventDetails->nSubEventType=0;
 						fnpAddEvent(pstruEventDetails);
@@ -290,7 +189,7 @@ _declspec (dllexport) int fn_NetSim_Application_Run()
 				fn_NetSim_App_RestartApplication();
 				break;
 			case event_APP_END:
-				switch(appInfo[pstruEventDetails->nApplicationId-1]->nAppType)
+				switch(applicationInfo[pstruEventDetails->nApplicationId-1]->nAppType)
 				{
 				case TRAFFIC_ERLANG_CALL:
 					fn_NetSim_Application_ErlangCall_EndCall(pstruEventDetails);
@@ -360,18 +259,18 @@ _declspec(dllexport) int fn_NetSim_Application_Finish()
 	unsigned int loop;
 	for(loop=0;loop<nApplicationCount;loop++)
 	{
-		free(appInfo[loop]->sourceList);
-		free(appInfo[loop]->destList);
-		free((char*)(appInfo[loop]->appData));
+		free(applicationInfo[loop]->sourceList);
+		free(applicationInfo[loop]->destList);
+		free((char*)(applicationInfo[loop]->appData));
 
-		free_app_metrics(appInfo[loop]);
+		free_app_metrics(applicationInfo[loop]);
 
-		while(appInfo[loop]->socketInfo)
-			LIST_FREE((void**)&appInfo[loop]->socketInfo,appInfo[loop]->socketInfo);
-		free(appInfo[loop]);
+		while(applicationInfo[loop]->socketInfo)
+			LIST_FREE((void**)&applicationInfo[loop]->socketInfo, applicationInfo[loop]->socketInfo);
+		free(applicationInfo[loop]);
 	}
 	
-	free(appInfo);
+	free(applicationInfo);
 	return 1;
 }
 
@@ -398,7 +297,7 @@ static PACKET_PRIORITY get_priority_based_on_qos(QUALITY_OF_SERVICE qos)
 /**
 This function is used to generate the packets for application
 */
-NetSim_PACKET* fn_NetSim_Application_GeneratePacket(APP_INFO* info,
+NetSim_PACKET* fn_NetSim_Application_GeneratePacket(ptrAPPLICATION_INFO info,
 													double ldArrivalTime,
 													NETSIM_ID nSourceId,
 													UINT destCount,
@@ -464,7 +363,7 @@ NetSim_PACKET* fn_NetSim_Application_GeneratePacket(APP_INFO* info,
 /**
 This function is used to generate the next packet
 */
-int fn_NetSim_Application_GenerateNextPacket(APP_INFO* appInfo,
+int fn_NetSim_Application_GenerateNextPacket(ptrAPPLICATION_INFO appInfo,
 											 NETSIM_ID nSource,
 											 UINT destCount,
 											 NETSIM_ID* nDestination,
@@ -699,7 +598,7 @@ int fn_NetSim_Application_GenerateNextPacket(APP_INFO* appInfo,
 	return 1;
 }
 
-void copy_payload(UINT8 real[],NetSim_PACKET* packet,unsigned int* payload,APP_INFO* info)
+void copy_payload(UINT8 real[],NetSim_PACKET* packet,unsigned int* payload, ptrAPPLICATION_INFO info)
 {
 	u_short i;
 	uint32_t key = 16;
@@ -721,7 +620,7 @@ void copy_payload(UINT8 real[],NetSim_PACKET* packet,unsigned int* payload,APP_I
 	}
 }
 
-int fn_NetSim_Add_DummyPayload(NetSim_PACKET* packet,APP_INFO* info)
+int fn_NetSim_Add_DummyPayload(NetSim_PACKET* packet, ptrAPPLICATION_INFO info)
 {
 	if (add_sae_j2735_payload(packet,info))
 		return 0; // Payload added by SAE J2735 Module

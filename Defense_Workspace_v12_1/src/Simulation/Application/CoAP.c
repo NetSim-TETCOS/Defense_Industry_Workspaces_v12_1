@@ -34,7 +34,7 @@
 #define COAP_PROBING_RATE_DEFAULT 1		//in byte/second
 
 
-int fn_NetSim_Application_ConfigureCOAPTraffic(APP_INFO* appInfo, void* xmlNetSimNode)
+int fn_NetSim_Application_ConfigureCOAPTraffic(ptrAPPLICATION_INFO appInfo, void* xmlNetSimNode)
 {
 	char* szVal;
 	APP_COAP_INFO* info = calloc(1, sizeof* info);
@@ -96,7 +96,7 @@ int fn_NetSim_Application_ConfigureCOAPTraffic(APP_INFO* appInfo, void* xmlNetSi
 	return 1; 
 }
 
-void fn_NetSim_Application_COAP_AppIn(APP_INFO* pstruappinfo, NetSim_PACKET* pstruPacket) {
+void fn_NetSim_Application_COAP_AppIn(ptrAPPLICATION_INFO pstruappinfo, NetSim_PACKET* pstruPacket) {
 
 	COAP_Header* pCOAPHeader = pstruPacket->pstruAppData->Packet_AppProtocol;
 	APP_COAP_INFO* info = pstruappinfo->appData; 
@@ -162,12 +162,12 @@ void fn_NetSim_Application_COAP_AppIn(APP_INFO* pstruappinfo, NetSim_PACKET* pst
 	
 }
 
-int fn_NetSim_Application_COAP_Start(APP_INFO* appInfo, NetSim_EVENTDETAILS* pstruEventDetails) {
+int fn_NetSim_Application_COAP_Start(ptrAPPLICATION_INFO appInfo, NetSim_EVENTDETAILS* pstruEventDetails) {
 	fn_NetSim_Application_StartCOAPAPP(appInfo, pstruEventDetails->dEventTime);
 	return 1;
 }
 
-int fn_NetSim_Application_StartCOAPAPP(APP_INFO* appInfo, double time) {
+int fn_NetSim_Application_StartCOAPAPP(ptrAPPLICATION_INFO appInfo, double time) {
 
 	if (appInfo->dEndTime <= time)
 		return 0;
@@ -207,7 +207,7 @@ int fn_NetSim_Application_StartCOAPAPP(APP_INFO* appInfo, double time) {
 	return 0;
 }
 
-int fn_NetSim_Application_COAP_ProcessRequest(APP_INFO* pstruappinfo, NetSim_PACKET* pstruPacket)
+int fn_NetSim_Application_COAP_ProcessRequest(ptrAPPLICATION_INFO pstruappinfo, NetSim_PACKET* pstruPacket)
 {
 	NETSIM_ID nSourceId = get_first_dest_from_packet(pstruPacket);
 	NETSIM_ID nDestinationId = pstruPacket->nSourceId;
@@ -251,7 +251,7 @@ int fn_NetSim_Application_COAP_ProcessRequest(APP_INFO* pstruappinfo, NetSim_PAC
 }
 
 
-int fn_NetSim_Application_COAP_Sent_ACK(APP_INFO* pstruappinfo, NetSim_PACKET* pstruPacket) {
+int fn_NetSim_Application_COAP_Sent_ACK(ptrAPPLICATION_INFO pstruappinfo, NetSim_PACKET* pstruPacket) {
 
 	NETSIM_ID nSourceId = get_first_dest_from_packet(pstruPacket);
 	NETSIM_ID nDestinationId = pstruPacket->nSourceId;
@@ -281,7 +281,7 @@ int fn_NetSim_Application_COAP_Sent_ACK(APP_INFO* pstruappinfo, NetSim_PACKET* p
 }
 
 
-int fn_NetSim_Application_COAP_Genrate_RequestPacket(APP_INFO* appInfo, NETSIM_ID nSource, NETSIM_ID nDestination, double time, char* PacketType) {
+int fn_NetSim_Application_COAP_Genrate_RequestPacket(ptrAPPLICATION_INFO appInfo, NETSIM_ID nSource, NETSIM_ID nDestination, double time, char* PacketType) {
 	double arrivalTime; //interarrival time
 	APP_COAP_INFO* info = appInfo->appData;
 	
@@ -324,7 +324,7 @@ int fn_NetSim_Application_COAP_Genrate_RequestPacket(APP_INFO* appInfo, NETSIM_I
 	return 1;
 }
 
-int fn_NetSim_Application_COAP_Genrate_Packet(APP_INFO* pstruappinfo, NETSIM_ID nSourceId, NETSIM_ID nDestinationId, double size, char* PacketType) {
+int fn_NetSim_Application_COAP_Genrate_Packet(ptrAPPLICATION_INFO pstruappinfo, NETSIM_ID nSourceId, NETSIM_ID nDestinationId, double size, char* PacketType) {
 
 	APP_COAP_INFO* info = pstruappinfo->appData;
 	//COAP_Header* pCOAPHeader = pstruEventDetails->pPacket->pstruAppData->Packet_AppProtocol;
@@ -394,6 +394,7 @@ COAP_Header* fn_NetSim_Application_COAP_CopyHeader(COAP_Header* src) {
 	pCOAPHeader->Options = pCOAPOptions;
 	return pCOAPHeader;
 }
+
 COAP_Header* fn_NetSim_Application_COAP_GenrateHeader(APP_COAP_INFO* info) {
 	COAP_Header* pCOAPHeader = calloc(1, sizeof* pCOAPHeader);
 

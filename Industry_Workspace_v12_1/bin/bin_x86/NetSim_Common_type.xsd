@@ -57,4 +57,32 @@
     <xs:attribute name="BUFFER_SIZE_B" type="xs:double" use="optional"/>
     <xs:attribute name="BUFFER_SIZE_BITS" type="xs:double" use="optional"/>
   </xs:attributeGroup>
+
+  <xs:simpleType name="MODULATION">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="QPSK"/>
+      <xs:enumeration value="8PSK"/>
+      <xs:enumeration value="16APSK"/>
+      <xs:enumeration value="16QAM"/>
+      <xs:enumeration value="32APSK"/>
+      <xs:enumeration value="64QAM"/>
+      <xs:enumeration value="256QAM"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="APP_PROTOCOL">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="NONE"/>
+      <xs:enumeration value="RTP"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="TRANSPORT_PROTOCOL">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="NONE"/>
+      <xs:enumeration value="TCP"/>
+      <xs:enumeration value="UDP"/>
+      <xs:enumeration value="WSMP"/>
+    </xs:restriction>
+  </xs:simpleType>
 </xs:schema>
